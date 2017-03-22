@@ -34,6 +34,10 @@
         <!-- Test -->
         <assertj.version>2.2.0</assertj.version>
 
+        <!-- JMeter -->
+        <jmeter.host>localhost</jmeter.host>
+        <jmeter.port>8080</jmeter.port>
+
         <!-- Others -->
         <mysql-driver.version>5.1.36</mysql-driver.version>
 
@@ -380,7 +384,8 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <wroManagerFactory>ro.isdc.wro.maven.plugin.manager.factory.ConfigurableWroManagerFactory</wroManagerFactory>
+                    <wroManagerFactory>ro.isdc.wro.maven.plugin.manager.factory.ConfigurableWroManagerFactory
+                    </wroManagerFactory>
                     <cssDestinationFolder>${project.build.directory}/petclinic/resources/css</cssDestinationFolder>
                     <wroFile>${basedir}/src/main/wro/wro.xml</wroFile>
                     <extraConfigFile>${basedir}/src/main/wro/wro.properties</extraConfigFile>
@@ -473,7 +478,68 @@
                 </dependency>
             </dependencies>
         </profile>
-   </profiles>
+        <profile>
+            <id>performance</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.lazerycode.jmeter</groupId>
+                        <artifactId>jmeter-maven-plugin</artifactId>
+                        <version>2.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>jmeter-tests</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>jmeter</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <propertiesUser>
+                                <PETCLINIC_HOST>${jmeter.host}</PETCLINIC_HOST>
+                                <PETCLINIC_PORT>${jmeter.port}</PETCLINIC_PORT>
+                            </propertiesUser>
+                            <ignoreResultFailures>true</ignoreResultFailures>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.lazerycode.jmeter</groupId>
+                        <artifactId>jmeter-analysis-maven-plugin</artifactId>
+                        <version>1.0.6</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>analyze</goal>
+                                </goals>
+                                <phase>verify</phase>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <!--
+                            source file that contains jmeter result data. Needs to be XML format or a GZIPed XML format
+                            -->
+                            <source>${project.build.directory}/jmeter/results/*</source>
+
+                            <!--
+                            directory where to store analysis report files. At least a file "summary.txt" will be stored here.
+                            -->
+                            <targetDirectory>${project.build.directory}/reports</targetDirectory>
+                        </configuration>
+                    </plugin>
+                    <!-- When the performance profile is active, no tests need to run, ontly JMeter tests -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>2.9</version>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <url>demopetclinic</url>
 </project>
